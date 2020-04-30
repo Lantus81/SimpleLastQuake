@@ -17,7 +17,7 @@ class EarthquakeViewModel(application: Application) : AndroidViewModel(applicati
         private const val QUERY_ORDER_TIME = "&orderby=time"
         private const val QUERY_LIMIT_100 = "&limit=100"
         private const val QUERY_MIN_MAG = "&minmagnitude="
-        private const val QUERY_MAXRADIUS ="&maxradius=5"
+        private const val QUERY_MAXRADIUS = "&maxradius=5"
         private const val EMSC_QUERY_URL =
             "https://www.seismicportal.eu/fdsnws/event/1/query?format=json&limit=100&orderby=time"
     }
@@ -45,15 +45,19 @@ class EarthquakeViewModel(application: Application) : AndroidViewModel(applicati
         get() = _location
 
 
-
     //for showing data loader and hiding it
     val _loading = MutableLiveData<Boolean>()
     val loading: LiveData<Boolean>
         get() = _loading
 
+    //location switch
+    val _near_me_is_on = MutableLiveData<Boolean>()
+    val near_me_is_on: LiveData<Boolean>
+        get() = _near_me_is_on
+
     /*
-    server America USGS = 1 //default
-    server Europe EMSC = 2
+    server America USGS = 1
+    server Europe EMSC = 2 //default
      */
     val _serverName = MutableLiveData<Int>()
     val serverName: LiveData<Int>
@@ -64,7 +68,10 @@ class EarthquakeViewModel(application: Application) : AndroidViewModel(applicati
         _requestQuery.value = USGS_REQUEST_URL
         _magnitude.value = ""
         _location.value = ""
-        _serverName.value = 1
+        _serverName.value = 2 //default is set Europe
+        _near_me_is_on.value = false
+        setQuery()
+        getEarthquakes()
     }
 
     fun getEarthquakes() {
@@ -112,55 +119,38 @@ class EarthquakeViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
-    fun onEMSCDataChanged(filter: String, isChecked: Boolean) {
-        if (this.filter.update(filter, isChecked)) {
-            _serverName.value = 2
-        }
+    fun onEMSCDataChanged() {
+        _serverName.value = 2
+        setQuery()
+        getEarthquakes()
     }
 
-    fun onUSGSDataChanged(filter: String, isChecked: Boolean) {
-        if (this.filter.update(filter, isChecked)) {
-            _serverName.value = 1
-        }
+    fun onUSGSDataChanged() {
+        _serverName.value = 1
+        setQuery()
+        getEarthquakes()
     }
 
-    fun onLocationChanged(filter: String, lat: String, lon: String, isChecked: Boolean) {
-        if (this.filter.update(filter, isChecked)) {
-            if (isChecked) {
-                _location.value = "&latitude=" + lat + "&longitude=" + lon + QUERY_MAXRADIUS
-                if (serverName.value == 1) {
-                    _requestQuery.value =
-                        QUERY_MAIN + QUERY_ORDER_TIME + QUERY_LIMIT_100 + magnitude.value + location.value
-                }else if(serverName.value == 2){
-                    _requestQuery.value =
-                        EMSC_QUERY_URL + magnitude.value + location.value
-                }
-                getEarthquakes()
-            } else {
-                _location.value = ""
-                if (serverName.value == 1) {
-                    _requestQuery.value =
-                        QUERY_MAIN + QUERY_ORDER_TIME + QUERY_LIMIT_100 + magnitude.value
-                }else if(serverName.value == 2){
-                    _requestQuery.value =
-                        EMSC_QUERY_URL + magnitude.value
-                }
-
-               getEarthquakes()
-            }
+    fun onLocationChanged(lat: String, lon: String) {
+        _near_me_is_on.value = !near_me_is_on.value!!
+        if (near_me_is_on.value!!) {
+            _location.value = "&latitude=" + lat + "&longitude=" + lon + QUERY_MAXRADIUS
         } else {
             _location.value = ""
-            if (serverName.value == 1) {
-                _requestQuery.value =
-                    QUERY_MAIN + QUERY_ORDER_TIME + QUERY_LIMIT_100 + magnitude.value
-            }else if(serverName.value == 2){
-                _requestQuery.value =
-                    EMSC_QUERY_URL + magnitude.value
-            }
-            getEarthquakes()
         }
+        setQuery()
+        getEarthquakes()
     }
 
+    private fun setQuery(){
+        if (serverName.value == 1) {
+            _requestQuery.value =
+                QUERY_MAIN + QUERY_ORDER_TIME + QUERY_LIMIT_100 + magnitude.value + location.value
+        } else if (serverName.value == 2) {
+            _requestQuery.value =
+                EMSC_QUERY_URL + magnitude.value + location.value
+        }
+    }
     private class FilterHolder {
         var currentValue: String? = null
             private set

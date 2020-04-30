@@ -12,36 +12,13 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
-
-        <HorizontalScrollView
-            android:id="@+id/scrollview_location_chips"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
-            <com.google.android.material.chip.ChipGroup
-                android:id="@+id/near_me"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                android:paddingTop="4dp"
-                android:paddingEnd="8dp"
-                android:paddingRight="8dp"
-                android:paddingLeft="8dp"
-                android:paddingStart="8dp"
-                android:paddingBottom="0dp"
-                app:singleSelection="true"
-                app:singleLine="true" />
-        </HorizontalScrollView>
-         <HorizontalScrollView
+      <HorizontalScrollView
             android:id="@+id/scrollview_filters_chips"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/scrollview_location_chips">
+            app:layout_constraintTop_toTopOf="parent">
             <com.google.android.material.chip.ChipGroup
                 android:id="@+id/filter_list"
                 android:layout_width="wrap_content"

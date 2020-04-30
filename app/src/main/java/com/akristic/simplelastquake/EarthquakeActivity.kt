@@ -7,13 +7,13 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationManager
-import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
 import android.net.Uri
 import android.os.Bundle
 import android.os.Looper
 import android.provider.Settings
 import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import android.widget.AdapterView.OnItemClickListener
 import android.widget.Toast
@@ -24,12 +24,12 @@ import androidx.lifecycle.ViewModelProvider
 import com.akristic.simplelastquake.databinding.EarthquakeActivityBinding
 import com.google.android.gms.location.*
 import com.google.android.material.chip.Chip
-import kotlinx.android.synthetic.main.earthquake_activity.*
 import java.util.*
 
 class EarthquakeActivity : AppCompatActivity() {
     val PERMISSION_ID = 42
     lateinit var mFusedLocationClient: FusedLocationProviderClient
+    lateinit var  menu: Menu
 
     lateinit var viewModel: EarthquakeViewModel
     private var location: Location? = null
@@ -117,55 +117,6 @@ class EarthquakeActivity : AppCompatActivity() {
             chipGroup.addView(chip)
         }
 
-        val chipGroupNearMe = binding.nearMe
-        val inflaterNear = LayoutInflater.from(chipGroupNearMe.context)
-        val childrenNear: MutableList<Chip> = mutableListOf()
-
-        //near me
-        val chipNearMe =
-            inflaterNear.inflate(R.layout.location_chip, chipGroupNearMe, false) as Chip
-        chipNearMe.text = "Near Me"
-        chipNearMe.tag = "LOCATION"
-        chipNearMe.setOnCheckedChangeListener { button, isChecked ->
-            getLastLocation()
-            val currentLocation = location
-            if (currentLocation != null) {
-                viewModel.onLocationChanged(
-                    button.tag as String,
-                    currentLocation.latitude.toString(),
-                    currentLocation.longitude.toString(),
-                    isChecked
-                )
-            }
-        }
-        childrenNear.add(chipNearMe)
-        //chip europe
-        val chipEurope =
-            inflaterNear.inflate(R.layout.location_chip, chipGroupNearMe, false) as Chip
-        chipEurope.text = "EMSC Data"
-        chipEurope.tag = "EUROPE"
-        chipEurope.setOnCheckedChangeListener { button, isChecked ->
-                viewModel.onEMSCDataChanged(button.tag as String, isChecked)
-            }
-
-        childrenNear.add(chipEurope)
-
-        //chip europe
-        val chipAmerica =
-            inflaterNear.inflate(R.layout.location_chip, chipGroupNearMe, false) as Chip
-        chipAmerica.text = "USGS Data"
-        chipAmerica.tag = "AMERICA"
-        chipAmerica.setOnCheckedChangeListener { button, isChecked ->
-            viewModel.onUSGSDataChanged(button.tag as String, isChecked)
-        }
-        childrenNear.add(chipAmerica)
-
-        //clear chips if exist
-        chipGroupNearMe.removeAllViews()
-        //add created chips
-        for (chip in childrenNear) {
-            chipGroupNearMe.addView(chip)
-        }
         //get location on startup
         getLastLocation()
     }
@@ -256,6 +207,62 @@ class EarthquakeActivity : AppCompatActivity() {
                 Toast.LENGTH_LONG
             ).show()
         }
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        menuInflater.inflate(R.menu.settings, menu)
+        this.menu = menu
+        if(viewModel.near_me_is_on.value!!){
+            menu.getItem(0).setIcon(R.drawable.ic_earthquake)
+        }else{
+            menu.getItem(0).setIcon(R.drawable.ic_earthquake_off)
+        }
+        if (viewModel.serverName.value==1){
+            menu.getItem(1).setTitle("EMSC Data")
+            menu.getItem(2).setTitle("USGS Data (On)")
+        }
+        if (viewModel.serverName.value==2){
+            menu.getItem(1).setTitle("EMSC Data (On)")
+            menu.getItem(2).setTitle("USGS Data")
+        }
+        return true
+    }
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        val id = item.itemId
+        if (id == R.id.action_location) {
+            getLastLocation()
+            val currentLocation = location
+            if (currentLocation != null) {
+                viewModel.onLocationChanged(
+                    currentLocation.latitude.toString(),
+                    currentLocation.longitude.toString()
+                )
+                if(viewModel.near_me_is_on.value!!){
+                    menu.getItem(0).setIcon(R.drawable.ic_earthquake)
+                }else{
+                    menu.getItem(0).setIcon(R.drawable.ic_earthquake_off)
+                }
+            }
+            return true
+        }
+        if (id == R.id.action_emsc_data) {
+            viewModel.onEMSCDataChanged()
+            menu.getItem(1).setTitle("EMSC Data (On)")
+            menu.getItem(2).setTitle("USGS Data")
+            return true
+        }
+        if (id == R.id.action_usgs_data) {
+            viewModel.onUSGSDataChanged()
+            menu.getItem(1).setTitle("EMSC Data")
+            menu.getItem(2).setTitle("USGS Data (On)")
+            return true
+        }
+
+        return super.onOptionsItemSelected(item)
     }
 }
 
